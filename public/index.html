@@ -1,55 +1,176 @@
-<!doctype html>
+<!DOCTYPE html>
 <html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <title>Fun wallet integration demo</title>
+    <meta name="description" content="" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <link
+      href="https://fonts.googleapis.com/css?family=Noto+Serif+SC"
+      rel="stylesheet"
+    />
+    <script src="bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.2.11/dist/web3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/6.1.0/rxjs.umd.js"></script>
+    <script
+      src="https://wallet.funfair.io/assets/sdk/fun-wallet-sdk.js"
+      type="text/JavaScript"
+    ></script>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
 
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <title>Vanilla Js 🌴🌴🌴</title>
-  <meta name="description" content="">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <link href="https://fonts.googleapis.com/css?family=Noto+Serif+SC" rel="stylesheet">
-  <script src="bundle.js"></script>
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    html {
+      html {
         background-color: black;
-    }
+      }
 
-    body, html {
-      font-family: 'Noto Serif SC', serif;
-      color: black;
-      background-color: #999;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-    }
+      body,
+      html {
+        font-family: "Noto Serif SC", serif;
+        color: black;
+        background-color: #999;
+        text-align: center;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
 
-    #header {
-      padding: 1em;
-      background-color: #222;
-      color: white;
-      text-align: center;
-    }
+    <script type="text/javascript">
+      const isAuthenticated$ = new rxjs.BehaviorSubject(false);
+      const restoreAuthenticationTaskCompleted$ = new rxjs.BehaviorSubject(
+        false
+      );
 
-    #header h1 {
-      margin: 0;
-      padding: 0;
-    }
+      function leaderLoaded() {
+        window.funwallet.sdk.init();
 
-    #header p {
-      color: white;
-    }
+        window.funwallet.sdk.on("authenticationCompleted", (result) => {
+          if (result.origin === "https://wallet.funfair.io") {
+            isAuthenticated$.next(true);
+          }
+        });
 
-  </style>
-</head>
-<body>
-<!-- Add your site or application content here -->
-  <header id="header">
-    <h1>Vanilla Js 🌴🌴🌴</h1><p>Insert opinions later...</p>
-  </header>
-  <div id="app"></div>
-</body>
+        window.funwallet.sdk.on("restoreAuthenticationCompleted", (result) => {
+          if (result.origin === "https://wallet.funfair.io") {
+            restoreAuthenticationTaskCompleted$.next(true);
+          }
+        });
+
+        window.funwallet.sdk.on("isKycVerified", (result) => {
+          if (result.origin === "https://wallet.funfair.io") {
+            if (!result.data.isVerified) {
+              window.funwallet.sdk.showFunWalletModal();
+            } else {
+              // maybe show some kind of error message as in theory
+              // your client should not be showing ability to popup KYC
+              // when they are already verified
+              console.error(
+                "Your client should not show the kyc logic if already kyced"
+              );
+            }
+          }
+        });
+
+        window.funwallet.sdk.on("kycProcessCancelled", (result) => {
+          if (result.origin === "https://wallet.funfair.io") {
+            if (result.data.cancelled) {
+              window.funwallet.sdk.hideFunWalletModal();
+              // you may want to move routes etc here hence why you hook onto this action
+              // and the sdk does not
+            }
+          }
+        });
+
+        // https://funfair-tech.github.io/fun-wallet-docs/guide/web-sdk/sdk-event-listeners.html#list-of-all-available-listeners
+        // register all the other events your interested in here...
+      }
+
+      async function followerLoaded() {
+        await window.funwallet.sdk.registerFollowerInstance();
+      }
+
+      function login() {
+        window.funwallet.sdk.openWalletAuthenticationPopUp();
+      }
+
+      function logout() {
+        window.funwallet.sdk.logout();
+        isAuthenticated$.next(false);
+      }
+
+      let web3 = undefined;
+
+      function web3Instance() {
+        if (web3) {
+          return web3;
+        }
+
+        return (web3 = new Web3(window.funwallet.sdk.ethereum));
+      }
+
+      async function _signAMessage(messageText) {
+        const ethereumAddress = await window.funwallet.sdk.ethereumAddress();
+
+        const result = await web3Instance().eth.personal.sign(
+          messageText,
+          ethereumAddress
+        );
+
+        return result;
+      }
+
+      async function signAMessage() {
+        const signature = await _signAMessage("TESTME");
+        console.log("Sign message complete. sig -", signature);
+      }
+
+      async function sendSignedTransaction() {
+        const signature = await _sendTransaction({
+          to: "0x45Cd08334aeedd8a06265B2Ae302E3597d8fAA28",
+          value: "0x00", // 0x38d7ea4c68000 if you want to add some value 0.002 ETH
+        });
+
+        console.log("Send signed transaction complete. sig -", signature);
+      }
+
+      async function _sendTransaction(tx) {
+        const ethereumAddress = await window.funwallet.sdk.ethereumAddress();
+        tx.from = ethereumAddress;
+
+        web3Instance()
+          .eth.sendTransaction(tx)
+          .once("transactionHash", (transactionHash) => {
+            console.log("Transaction hash test app", transactionHash);
+          })
+          .on("error", async (error) => {
+            console.log(error.message, error);
+          });
+      }
+
+      async function openKycProcess() {
+        await window.funwallet.sdk.kycModalOpen();
+      }
+    </script>
+  </head>
+  <body>
+    <div id="fun-wallet-leader">
+      <div class="fun-wallet-container">
+        <iframe
+          allow="camera"
+          id="funwallet-iframe"
+          onload="leaderLoaded()"
+          is-fun-wallet
+          is-leader
+        ></iframe>
+      </div>
+    </div>
+    <div id="fun-wallet-darken"></div>
+
+    <div id="app"></div>
+  </body>
 </html>
