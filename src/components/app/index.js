@@ -36,7 +36,7 @@ export default class App {
     if (this.elem)
       this.elem.innerHTML = `
         <section data-component="app">
-          <img src="./logo.svg" id"logo" alt="logo" />
+          <img src="./logo.svg" id="logo" alt="logo" />
           <p id="loading">Loading please wait...</p>
           <div id="content">
             <div id="logged-out-content">
@@ -57,6 +57,7 @@ export default class App {
                 onload="followerLoaded()"
                 is-fun-wallet="true"
                 is-follower="true"
+                frameborder="0"
               ></iframe>
             </div>
           </div>
