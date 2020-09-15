@@ -61,6 +61,18 @@
           }
         });
 
+        window.funwallet.sdk.on("walletInactivityLoggedOut", (result) => {
+          if (result.origin === "https://wallet.funfair.io") {
+            isAuthenticated$.next(false);
+          }
+        });
+
+        window.funwallet.sdk.on("walletDeviceDeletedLoggedOut", (result) => {
+          if (result.origin === "https://wallet.funfair.io") {
+            isAuthenticated$.next(false);
+          }
+        });
+
         window.funwallet.sdk.on("isKycVerified", (result) => {
           if (result.origin === "https://wallet.funfair.io") {
             if (!result.data.isVerified) {
