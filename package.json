@@ -7,9 +7,7 @@
     "start": "webpack-dev-server --https --key ssl/server.key --cert ssl/server.crt",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "dependencies": {
-    "post-robot": "^9.0.36"
-  },
+  "dependencies": {},
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-core": "^6.26.0",
