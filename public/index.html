@@ -17,7 +17,7 @@
     <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.2.11/dist/web3.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/6.1.0/rxjs.umd.js"></script>
     <script
-      src="https://wallet.funfair.io/assets/sdk/fun-wallet-sdk.js?appId=0x238fb86cd351a3711ba4917ad63dd6fcb198f7048a6225f480fe500e42dca975"
+      src="https://wallet.funfair.io/assets/sdk/fun-wallet-sdk.js?appId=0x1b084986077d1aedfa1d92318fdcc7d1621fbc92deb390269b94226fd79c0ce6"
       type="text/JavaScript"
     ></script>
     <style>
@@ -107,11 +107,11 @@
       }
 
       function login() {
-        window.funwallet.sdk.openWalletAuthenticationPopUp();
+        window.funwallet.sdk.auth.login();
       }
 
-      function logout() {
-        window.funwallet.sdk.logout();
+      async function logout() {
+        await window.funwallet.sdk.auth.logout();
         isAuthenticated$.next(false);
       }
 
@@ -126,7 +126,7 @@
       }
 
       async function _signAMessage(messageText) {
-        const ethereumAddress = await window.funwallet.sdk.ethereumAddress();
+        const ethereumAddress = await window.funwallet.sdk.eth.address();
 
         const result = await web3Instance().eth.personal.sign(
           messageText,
@@ -151,7 +151,7 @@
       }
 
       async function _sendTransaction(tx) {
-        const ethereumAddress = await window.funwallet.sdk.ethereumAddress();
+        const ethereumAddress = await window.funwallet.sdk.eth.address();
         tx.from = ethereumAddress;
 
         web3Instance()
@@ -165,7 +165,7 @@
       }
 
       async function openKycProcess() {
-        await window.funwallet.sdk.kycModalOpen();
+        await window.funwallet.sdk.kyc.start();
       }
     </script>
   </head>

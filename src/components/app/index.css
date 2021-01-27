@@ -15,6 +15,10 @@
   height: 100px;
 }
 
+#logged-in-content {
+  width: 100%;
+}
+
 #logged-out-content,
 #logged-in-content {
   display: none;
